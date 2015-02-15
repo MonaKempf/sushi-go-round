@@ -10,5 +10,7 @@ public class Main {
 		FileUtils.openSuchi();
 		Player player = new Player();
 		player.skipInto();
+		player.furstLevel();
+		
 	}
 }

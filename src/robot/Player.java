@@ -32,6 +32,13 @@ public class Player {
 		click(320, 375); //CONTINUE3
 		
 	}
+	
+	public void furstLevel(){
+		checkOrders();
+		makeSushi();
+		makeCaliforniaRoll();
+		makeGunkanMaki();
+	}
 	public void mouseMove(int x, int y){
 		robot.mouseMove(OFFSET_X+x,OFFSET_Y+y);
 	}
@@ -41,4 +48,53 @@ public class Player {
 		robot.mousePress(InputEvent.BUTTON1_MASK);
 		robot.mouseRelease(InputEvent.BUTTON1_MASK);
 	}
-}
+	public void checkOrders(){
+		
+		
+	}
+	public void makeSushi(){
+		robot.delay(1000);//Le jeu ne réagie pas instantannément 
+		click(90,335);//rice
+		robot.delay(100);
+		click(90,335);//rice
+		robot.delay(100);
+		click(35,390);//nori
+		robot.delay(100);
+		click(200,380);//rolle
+	}
+	public void makeCaliforniaRoll(){
+		robot.delay(1000);
+		click(90,335);//rice
+		robot.delay(100);
+		click(35,390);//nori
+		robot.delay(100);
+		click(90,390);//roe
+		robot.delay(100);
+		click(200,380);//rolle
+	}
+	
+	public void makeGunkanMaki(){
+		robot.delay(1000);
+		click(90,335);//rice
+		robot.delay(100);
+		click(35,390);//nori
+		robot.delay(100);
+		click(90,390);//roe
+		robot.delay(100);
+		click(90,390);//roe
+		robot.delay(100);
+		click(200,380);//rolle
+	}
+	public void makeSalmonRoll(){
+		robot.delay(1000);
+		click(90,335);//rice
+		robot.delay(100);
+		click(35,390);//nori
+		robot.delay(100);
+		click(30,335);//Salmon
+		robot.delay(100);
+		click(30,335);//Salmond
+		robot.delay(100);
+		click(200,380);//rolle
+	}
+	}
