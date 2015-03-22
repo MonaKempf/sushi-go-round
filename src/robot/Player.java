@@ -11,8 +11,8 @@ public class Player {
 	private static final int INITIAL_HEIGHT = 480;
 	private static final int CURRENT_WIDTH = 640;
 	private static final int CURRENT_HEIGHT = 480;
-	private static final int OFFSET_X = 156;
-	private static final int OFFSET_Y = 213;
+	private static final int OFFSET_X = 9;
+	private static final int OFFSET_Y = 69;
 
 	public Player() throws AWTException {
 		robot = new Robot();
@@ -20,7 +20,7 @@ public class Player {
 	}
 
 	public void skipInto() {
-		robot.delay(18000);
+		robot.delay(10000);
 		click(310, 200); //PLAY
 		robot.delay(1000);
 		click(320, 390); //CONTINUE1
