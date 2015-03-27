@@ -11,5 +11,4 @@ public class FileUtils {
 		Desktop desktop = Desktop.getDesktop();
 	    desktop.browse(new URI("sushi.html"));
 	}
-
 }
