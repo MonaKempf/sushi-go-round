@@ -9,7 +9,7 @@ public class Ingredient {
 	private int price;
 	
 	
-	public Ingredient(int coorX, int coorY, int price) throws IOException{
+	public Ingredient(int coorX, int coorY, int price){
 		this.x = coorX;
 		this.y = coorY;
 		this.price = price;

@@ -12,16 +12,12 @@ import javax.imageio.ImageIO;
 public class Order {
 	
 	private ArrayList<Dish> clientsOrder;
-	private Player bot;
-	
+		
 	public Order(ArrayList<Dish> L, Player bot){
 		clientsOrder= L;
-		this.bot = bot;
 	}
 	
-	public void add(Dish d){
-		clientsOrder.add(d);
-	}
+	
 	
 	
 	

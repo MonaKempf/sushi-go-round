@@ -19,5 +19,9 @@ public class Dish {
 		return ingredients;
 	}
 
+	public String getName() {
+		return name;
+	}
+
 
 }
