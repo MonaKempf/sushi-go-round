@@ -7,6 +7,12 @@ import java.util.List;
 import java.util.Map;
 
 public class GUIInterface {
+	public static final int OFFSET_X = 9;
+	public static final int OFFSET_Y = 69;
+	public static final int CLIENT_SPACING = 101;
+
+	public static final Coordinate CLIENT_1 = new Coordinate(310, 200);
+
 	public static final Coordinate PLAY = new Coordinate(310, 200);
 	public static final Coordinate CONTINUE1 = new Coordinate(320, 390);
 	public static final Coordinate CONTINUE2 = new Coordinate(320, 400);
@@ -19,9 +25,10 @@ public class GUIInterface {
 	public static final Coordinate FREE = new Coordinate(490, 294);
 
 	public static final List<Coordinate> PLATES = new ArrayList<Coordinate>();
+
 	static {
 		for (int i = 0; i < 6; i++) {
-			PLATES.add(new Coordinate(i * Player.CLIENT_SPACING + 80, 203));
+			PLATES.add(new Coordinate(i * CLIENT_SPACING + 80, 203));
 		}
 	}
 

@@ -1,48 +1,29 @@
 package robot;
 
-import static robot.Dish.CALIFORNIA_ROLL;
-import static robot.Dish.GUNKAN_MAKI;
-import static robot.Dish.ONIGIRI;
-
 import java.awt.AWTException;
-import java.awt.Rectangle;
 import java.awt.Robot;
 import java.awt.event.InputEvent;
-import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-
-import javax.imageio.ImageIO;
+import java.util.Queue;
+import java.util.Timer;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class Player {
 
 	private static SimpleLogger<Player> LOGGER = new SimpleLogger<Player>(Player.class);
-	public static final int OFFSET_X = 9;
-	public static final int OFFSET_Y = 69;
 	private static final int CLICK_DELAY = 0;
-	public static final int CLIENT_SPACING = 101;
 
-	public static Map<BufferedImage, Dish> IMAGE_DISH_MAPPING = new HashMap<BufferedImage, Dish>();
-	static {
-		try {
-			IMAGE_DISH_MAPPING.put(ImageIO.read(new File("order_database/onigiri.png")), ONIGIRI);
-			IMAGE_DISH_MAPPING.put(ImageIO.read(new File("order_database/california_roll.png")), CALIFORNIA_ROLL);
-			IMAGE_DISH_MAPPING.put(ImageIO.read(new File("order_database/gunkan_maki.png")), GUNKAN_MAKI);
-		} catch (IOException e) {
-			System.exit(-1);
-		}
-	}
-
+	private Timer timer;
 	private Robot robot;
+	private Queue<Dish> orders;
 	private StockManager stockManager;
 	public boolean[] onGoingOrders = { false, false, false, false, false, false };
 
 	public Player() throws AWTException {
+		timer = new Timer();
 		robot = new Robot();
 		stockManager = new StockManager();
+		orders = new ConcurrentLinkedQueue<Dish>();
 	}
 
 	public void skipInto() {
@@ -59,7 +40,7 @@ public class Player {
 	}
 
 	public void mouseMove(Coordinate coordinate) {
-		robot.mouseMove(OFFSET_X + coordinate.getX(), OFFSET_Y + coordinate.getY());
+		robot.mouseMove(GUIInterface.OFFSET_X + coordinate.getX(), GUIInterface.OFFSET_Y + coordinate.getY());
 	}
 
 	public void click(Coordinate coordinate) {
@@ -67,8 +48,8 @@ public class Player {
 		robot.mousePress(InputEvent.BUTTON1_MASK);
 		robot.delay(100);
 		robot.mouseRelease(InputEvent.BUTTON1_MASK);
-		robot.mouseMove(OFFSET_X, OFFSET_Y);// (bug windows) reset mouse for
-											// next click
+		// (bug windows) reset mouse for next click
+		robot.mouseMove(GUIInterface.OFFSET_X, GUIInterface.OFFSET_Y);
 	}
 
 	public void chooseIngredient(Ingredient ingredient) {
@@ -101,14 +82,17 @@ public class Player {
 		robot.delay(1000);
 	}
 
-	public void startPlaying() throws IOException, InterruptedException {
+	public void startPlaying() throws IOException, InterruptedException, AWTException {
+		timer.scheduleAtFixedRate(new ManageOrdersTask(orders), 0, 50);
 		int i = 0;
 		while (i++ < 100) {
 			LOGGER.info("Playing, current stock : " + stockManager.getInventory());
-			handleOrders();
+			prepareOrders(orders);
 			cleanUpPlates();
 			Thread.sleep(100);
 		}
+
+		timer.cancel();
 	}
 
 	public void cleanUpPlates() {
@@ -117,52 +101,12 @@ public class Player {
 		}
 	}
 
-	public void handleOrders() {
-		for (int i = 0; i < 6; i++) {
-			Rectangle rec = new Rectangle(OFFSET_X + i * CLIENT_SPACING + 35, OFFSET_Y + 50, 40, 35);
-			BufferedImage img = robot.createScreenCapture(rec);
-
-			if (!onGoingOrders[i]) {
-				Dish orderdedDish = searchPerfectMatch(img);
-				if (orderdedDish != null) {
-					make(orderdedDish);
-					made(i);
-				}
-			} else if (searchPerfectMatch(img) == null) {
-				served(i);
-			}
+	public void prepareOrders(Queue<Dish> orders) {
+		Dish order = orders.poll();
+		while (order != null) {
+			make(order);
+			order = orders.poll();
 		}
-	}
-
-	public Dish searchPerfectMatch(BufferedImage img) {
-		for (Entry<BufferedImage, Dish> entry : IMAGE_DISH_MAPPING.entrySet()) {
-			if (compareImage(img, entry.getKey())) {
-				return entry.getValue();
-			}
-		}
-
-		return null;
-	}
-
-	public boolean made(int i) {
-		onGoingOrders[i] = true;
-		return onGoingOrders[i];
-	}
-
-	public boolean served(int i) {
-		onGoingOrders[i] = false;
-		return onGoingOrders[i];
-	}
-
-	public boolean compareImage(BufferedImage img, BufferedImage imgD) {
-		for (int i = 0; i < img.getWidth(); i++) {
-			for (int j = 0; j < img.getHeight(); j++) {
-				if (img.getRGB(i, j) != imgD.getRGB(i, j)) {
-					return false;
-				}
-			}
-		}
-		return true;
 	}
 
 }

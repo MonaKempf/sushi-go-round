@@ -7,12 +7,8 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import javax.imageio.ImageIO;
-
-import org.omg.CORBA.SystemException;
 
 public class ConstructOrderDatabaseMain {
 	public static void main(String[] arg) throws IOException, URISyntaxException, AWTException {
@@ -24,7 +20,7 @@ public class ConstructOrderDatabaseMain {
 
 		for (int j = 0; j < 10; j++) {
 			for (int i = 0; i < 6; i++) {
-				Rectangle rec = new Rectangle(Player.OFFSET_X + i *Player.CLIENT_SPACING + 35, Player.OFFSET_Y + 50, 40, 35);
+				Rectangle rec = new Rectangle(GUIInterface.OFFSET_X + i * GUIInterface.CLIENT_SPACING + 35, GUIInterface.OFFSET_Y + 50, 40, 35);
 				BufferedImage img = robot.createScreenCapture(rec);
 				ImageIO.write(img, "png", new File("tmp/" + j + "_" + i + ".png"));
 
