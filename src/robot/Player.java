@@ -1,5 +1,9 @@
 package robot;
 
+import static robot.Dish.CALIFORNIA_ROLL;
+import static robot.Dish.GUNKAN_MAKI;
+import static robot.Dish.ONIGIRI;
+
 import java.awt.AWTException;
 import java.awt.Rectangle;
 import java.awt.Robot;
@@ -7,100 +11,126 @@ import java.awt.event.InputEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.Vector;
 
 import javax.imageio.ImageIO;
 
 public class Player {
 
 	private static SimpleLogger<Player> LOGGER = new SimpleLogger<Player>(Player.class);
-	private Robot robot;
-
 	public static final int OFFSET_X = 9;
 	public static final int OFFSET_Y = 69;
-	private static final int CLICK_DELAY = 1000;
+	private static final int CLICK_DELAY = 0;
 	public static final int CLIENT_SPACING = 101;
-
-	public static final File ONIGIRI = new File("order_database/onigiri.png");
-	public static final File CALIFORNIA_ROLL = new File("order_database/california_roll.png");
-	public static final File GUNKAN_MAKI = new File("order_database/gunkan_maki.png");
 
 	public static Map<BufferedImage, Dish> IMAGE_DISH_MAPPING = new HashMap<BufferedImage, Dish>();
 	static {
 		try {
-			IMAGE_DISH_MAPPING.put(ImageIO.read(ONIGIRI), Recipes.ONIGIRI);
-			IMAGE_DISH_MAPPING.put(ImageIO.read(CALIFORNIA_ROLL), Recipes.CALIFORNIA_ROLL);
-			IMAGE_DISH_MAPPING.put(ImageIO.read(GUNKAN_MAKI), Recipes.GUNKAN_MAKI);
+			IMAGE_DISH_MAPPING.put(ImageIO.read(new File("order_database/onigiri.png")), ONIGIRI);
+			IMAGE_DISH_MAPPING.put(ImageIO.read(new File("order_database/california_roll.png")), CALIFORNIA_ROLL);
+			IMAGE_DISH_MAPPING.put(ImageIO.read(new File("order_database/gunkan_maki.png")), GUNKAN_MAKI);
 		} catch (IOException e) {
 			System.exit(-1);
 		}
 	}
 
+	private Robot robot;
+	private StockManager stockManager;
+	public boolean[] onGoingOrders = { false, false, false, false, false, false };
+
 	public Player() throws AWTException {
 		robot = new Robot();
-
+		stockManager = new StockManager();
 	}
 
 	public void skipInto() {
 		robot.delay(10000);
-		click(310, 200); // PLAY
+		click(GUIInterface.PLAY);
 		robot.delay(1000);
-		click(320, 390); // CONTINUE1
+		click(GUIInterface.CONTINUE1);
 		robot.delay(1000);
-		click(320, 400); // CONTINUE2
+		click(GUIInterface.CONTINUE2);
 		robot.delay(1000);
-		click(585, 450); // SKIP
+		click(GUIInterface.SKIP);
 		robot.delay(1000);
-		click(320, 375); // CONTINUE3
-
+		click(GUIInterface.CONTINUE3);
 	}
 
-	public void mouseMove(int x, int y) {
-		robot.mouseMove(OFFSET_X + x, OFFSET_Y + y);
+	public void mouseMove(Coordinate coordinate) {
+		robot.mouseMove(OFFSET_X + coordinate.getX(), OFFSET_Y + coordinate.getY());
 	}
 
-	public void click(int x, int y) {
-		LOGGER.info("click on (" + x + "," + y + ")");
-		mouseMove(x, y);
+	public void click(Coordinate coordinate) {
+		mouseMove(coordinate);
 		robot.mousePress(InputEvent.BUTTON1_MASK);
+		robot.delay(100);
 		robot.mouseRelease(InputEvent.BUTTON1_MASK);
-		robot.delay(CLICK_DELAY);
-		mouseMove(0, 0);// (bug windows) reset mouse for next click
+		robot.mouseMove(OFFSET_X, OFFSET_Y);// (bug windows) reset mouse for
+											// next click
+	}
+
+	public void chooseIngredient(Ingredient ingredient) {
+		LOGGER.info("click on: " + ingredient);
+
+		stockManager.stockTake(ingredient);
+		click(GUIInterface.INGREDIENS_COORDINATES.get(ingredient));
+	}
+
+	public void buyStock(Ingredient ingredient) {
+		LOGGER.info("Buying stock for " + ingredient);
+		for (Coordinate coordinate : GUIInterface.BUY_INGREDIENS_COORDINATES.get(ingredient)) {
+			click(coordinate);
+			robot.delay(100);
+		}
+		robot.delay(8000);
+		stockManager.updateStock(ingredient);
 	}
 
 	public void make(Dish dish) {
-		LOGGER.info("Making " + dish.getName());
+		LOGGER.info("Making " + dish);
 		for (Ingredient ingredient : dish.getIngredients()) {
-			click(ingredient.getX(), ingredient.getY());
+			if (!stockManager.canBeMade(ingredient)) {
+				buyStock(ingredient);
+			}
+			chooseIngredient(ingredient);
+			robot.delay(CLICK_DELAY);
+		}
+		click(GUIInterface.ROLL);
+		robot.delay(1000);
+	}
+
+	public void startPlaying() throws IOException, InterruptedException {
+		int i = 0;
+		while (i++ < 100) {
+			LOGGER.info("Playing, current stock : " + stockManager.getInventory());
+			handleOrders();
+			cleanUpPlates();
+			Thread.sleep(100);
 		}
 	}
 
-	public void monitorOrders() throws IOException, InterruptedException {
-		while (true) {
-			LOGGER.info("Monitor orders:");
-			for (int i = 0; i < 6; i++) {
-				Rectangle rec = new Rectangle(OFFSET_X + i * CLIENT_SPACING + 35, OFFSET_Y + 50, 40, 35);
-				BufferedImage img = robot.createScreenCapture(rec);
+	public void cleanUpPlates() {
+		for (Coordinate platePosition : GUIInterface.PLATES) {
+			click(platePosition);
+		}
+	}
 
-				if (!onGoing[i]) {
-					Dish orderdedDish = searchPerfectMatch(img);
-					if (orderdedDish != null) {
-						make(orderdedDish);
-						made(i);
-					}
+	public void handleOrders() {
+		for (int i = 0; i < 6; i++) {
+			Rectangle rec = new Rectangle(OFFSET_X + i * CLIENT_SPACING + 35, OFFSET_Y + 50, 40, 35);
+			BufferedImage img = robot.createScreenCapture(rec);
+
+			if (!onGoingOrders[i]) {
+				Dish orderdedDish = searchPerfectMatch(img);
+				if (orderdedDish != null) {
+					make(orderdedDish);
+					made(i);
 				}
-				else if (searchPerfectMatch(img) == null) {
-					served(i);
-				}
+			} else if (searchPerfectMatch(img) == null) {
+				served(i);
 			}
-			Thread.sleep(100);
 		}
 	}
 
@@ -114,16 +144,14 @@ public class Player {
 		return null;
 	}
 
-	public boolean[] onGoing = { false, false, false, false, false, false };
-
 	public boolean made(int i) {
-		onGoing[i] = true;
-		return onGoing[i];
+		onGoingOrders[i] = true;
+		return onGoingOrders[i];
 	}
 
 	public boolean served(int i) {
-		onGoing[i] = false;
-		return onGoing[i];
+		onGoingOrders[i] = false;
+		return onGoingOrders[i];
 	}
 
 	public boolean compareImage(BufferedImage img, BufferedImage imgD) {

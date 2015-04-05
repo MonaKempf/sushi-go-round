@@ -1,27 +1,28 @@
 package robot;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import static robot.Ingredient.RICE;
+import static robot.Ingredient.NORI;
+import static robot.Ingredient.ROE;
+import static robot.Ingredient.SALMON;
 
-public class Dish {
-	private static SimpleLogger<Dish> LOGGER = new SimpleLogger<Dish>(Dish.class);
 
-	private String name;
+public enum Dish {
+	
+	ONIGIRI(RICE, RICE, NORI),
+	CALIFORNIA_ROLL(RICE, NORI, ROE),
+	GUNKAN_MAKI(RICE, NORI, ROE, ROE),
+	SALMON_ROLL(RICE, NORI, SALMON, SALMON);
+
 	private List<Ingredient> ingredients;
 
-	public Dish(String name, Ingredient[] ingredients) {
-		this.name = name;
+	private Dish(Ingredient...ingredients) {
 		this.ingredients = Arrays.asList(ingredients);
 	}
 
 	public List<Ingredient> getIngredients() {
 		return ingredients;
 	}
-
-	public String getName() {
-		return name;
-	}
-
-
+	
 }
